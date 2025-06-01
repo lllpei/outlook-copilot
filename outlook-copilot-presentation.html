@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outlook Copilot スケジューリング機能</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Yu Gothic', 'Hiragino Sans', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #333;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .presentation-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slide {
+            width: 90%;
+            max-width: 1200px;
+            height: 85vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #0078d4;
+            margin-bottom: 30px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 2.2em;
+            color: #005a9e;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        h3 {
+            font-size: 1.6em;
+            color: #0078d4;
+            margin: 25px 0 15px;
+            font-weight: 500;
+        }
+
+        p, li {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            position: relative;
+            padding-left: 35px;
+            margin-bottom: 15px;
+        }
+
+        ul li:before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #0078d4;
+            font-size: 0.8em;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #0078d4;
+        }
+
+        .feature-box {
+            background: #f5f5f5;
+            border: 2px solid #0078d4;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 120, 212, 0.2);
+        }
+
+        .command-box {
+            background: #263238;
+            color: #aed581;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 1.1em;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-btn {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-btn:hover {
+            background: #005a9e;
+            transform: scale(1.05);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .slide-counter {
+            font-size: 1em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .image-placeholder {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 2px dashed #0078d4;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            color: #0078d4;
+            font-weight: 500;
+        }
+
+        .three-columns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .column-box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-top: 4px solid #0078d4;
+            transition: all 0.3s ease;
+        }
+
+        .column-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .column-box h4 {
+            color: #0078d4;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 30px;
+            }
+            h1 { font-size: 2em; }
+            h2 { font-size: 1.6em; }
+            .three-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .title-slide {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+        }
+
+        .title-slide h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .title-slide p {
+            font-size: 1.5em;
+            color: #666;
+            animation: fadeInUp 1s ease-out 0.3s;
+            animation-fill-mode: both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- スライド1: タイトル -->
+        <div class="slide active">
+            <div class="title-slide">
+                <h1>Outlook<br>スケジューリング機能</h1>
+                <p>Copilotで会議調整する新しいアプローチ</p>
+            </div>
+        </div>
+
+        <!-- スライド2: Copilotの基本概要 -->
+        <div class="slide">
+            <h2>1. Copilotの基本概要</h2>
+            
+            <h3>Copilotチャットへのアクセス方法</h3>
+            <div class="feature-box">
+                <p>OutlookまたはWeb版のOutlookから、右側にあるCopilotのチャットを開きます。</p>
+                <img src="画像1.jpg" width="1133" height="134" style="max-width:100%;height:auto;display:block;margin:0 auto 10px;" alt="Outlook画面右上のCopilotアイコンのスクリーンショット（例）">
+                📷 画像1: Outlook画面右上のCopilotアイコン
+            </div>
+
+            <h3>Business Chatとの連携</h3>
+            <div class="highlight">
+                <p>Business Chatと同様のインターフェースで、「/」を打つと予測候補が表示されます。</p>
+                <p>プロンプトでは「[8選んだメンバー]との1時間の会議を調整して」等と自然な言語で指示できます。</p>
+            </div>
+        </div>
+
+        <!-- スライド3: スケジュール調整の基本操作 -->
+        <div class="slide">
+            <h2>2. スケジュール調整の基本操作</h2>
+            
+            <h3>メンバー選択機能の使い方</h3>
+            
+            <div class="feature-box">
+                <h4>「/」コマンドによる予測候補表示</h4>
+                <div class="command-box">/</div>
+                <p>スラッシュを入力すると、選択可能なメンバーが予測候補として表示されます。</p>
+            </div>
+
+            <div class="image-placeholder">
+                <img src="画像2.jpg"  width="1359" height="722" style="max-width:100%;height:auto;display:block;margin:0 auto 10px;" alt="メンバー選択画面 - 予測候補の表示のスクリーンショット（例）">
+                📷 画像2: メンバー選択画面 - 予測候補の表示
+            </div>
+
+            <h3>自然言語での指示方法</h3>
+            <ul>
+                <li>「来週の火曜日に1時間の会議を設定」</li>
+                <li>「[8選んだメンバー]との30分のミーティングを調整」</li>
+                <li>「今月中に全員が参加できる時間を探して」</li>
+            </ul>
+        </div>
+
+        <!-- スライド4: 調整画面の3つの選択肢（送信） -->
+        <div class="slide">
+            <h2>3. 調整画面の3つの選択肢 - 【送信】</h2>
+            
+            <div class="feature-box">
+                <h3>【送信】機能：即座にTeams会議を設定</h3>
+                <p>送信を押すとそのままCopilotが作った件名で会議のスケジュールが送信されます。<br>
+                デフォルトではTeams会議となっています。</p>
+                
+                <div class="image-placeholder">
+                    <img src="画像3.jpg" width="679" height="361" style="max-width:100%;height:auto;display:block;margin:0 auto 10px;" alt="送信ボタンと調整結果画面のスクリーンショット（例）">
+                    📷 画像3: 送信ボタンと調整結果画面
+                </div>
+                
+                <div class="highlight">
+                    <p><strong>メリット：</strong></p>
+                    <ul>
+                        <li>最速で会議設定が完了</li>
+                        <li>Teams会議リンクが自動生成</li>
+                        <li>参加者への通知も自動送信</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- スライド5: 調整画面の3つの選択肢（編集） -->
+        <div class="slide">
+            <h2>3. 調整画面の3つの選択肢 - 【編集】</h2>
+            
+            <div class="feature-box">
+                <h3>【編集】機能：詳細カスタマイズ</h3>
+                <p>編集画面では、予定表イベント画面がポップアップで出て件名等を変更することができます。</p>
+                
+                <h4>主な編集可能項目</h4>
+                <ul>
+                    <li>会議の件名変更</li>
+                    <li>日程の再検索（「時間の検索」を押すと再度確認）</li>
+                    <li>会議の詳細説明追加</li>
+                    <li>参加者の追加・削除</li>
+                </ul>
+                
+                <div class="highlight">
+                    <p>💡 <strong>ヒント：</strong> AIで生成されたコンテンツは削除可能な内容であることを示すため、背景色が異なります。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- スライド6: 調整画面の3つの選択肢（表示） -->
+        <div class="slide">
+            <h2>3. 調整画面の3つの選択肢 - 【表示】</h2>
+            
+            <div class="feature-box">
+                <h3>【表示】機能：前後の時間帯確認</h3>
+                <p>表示を押すと自分の前後の時間のスケジュールがフォーカスされて表示されます。</p>
+                
+                <div class="image-placeholder">
+                    <img src="画像4.jpg" width="1067" height="286" style="max-width:100%;height:auto;display:block;margin:0 auto 10px;" alt="カレンダービューでの時間帯表示のスクリーンショット（例）">
+                    📷 画像4: カレンダービューでの時間帯表示
+                </div>
+                
+                <div class="three-columns">
+                    <div class="column-box">
+                        <h4>確認できる内容</h4>
+                        <ul>
+                            <li>前後の予定</li>
+                            <li>移動時間の考慮</li>
+                            <li>バッファ時間</li>
+                        </ul>
+                    </div>
+                    <div class="column-box">
+                        <h4>活用シーン</h4>
+                        <ul>
+                            <li>連続会議の確認</li>
+                            <li>休憩時間の確保</li>
+                            <li>準備時間の考慮</li>
+                        </ul>
+                    </div>
+                    <div class="column-box">
+                        <h4>メリット</h4>
+                        <ul>
+                            <li>スケジュール全体を俯瞰</li>
+                            <li>無理のない日程調整</li>
+                            <li>効率的な時間管理</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- スライド7: 高度な活用方法 -->
+        <div class="slide">
+            <h2>4. 高度な活用方法</h2>
+            
+            <h3>チャット内での再調整機能</h3>
+            <div class="feature-box">
+                <p>先ほどは予定表イベント画面で編集を行いましたが、チャットで再調整も可能です。</p>
+                <div class="image-placeholder">
+                    <img src="画像5.jpg" width="1085" height="277" style="max-width:100%;height:auto;display:block;margin:0 auto 10px;" alt="チャット内での再調整画面のスクリーンショット（例）">
+                    📷 画像5: チャット内での再調整画面
+                </div>
+            </div>
+
+            <h3>編集画面を開かない効率的な変更方法</h3>
+            <div class="highlight">
+                <p>実行したい内容を記述したり、「/」を入力してメールやユーザーなどを参照したりできます。</p>
+                <div class="command-box">
+                    例：「もう少し遅い時間に変更して」<br>
+                    　　「参加者に〇〇さんを追加」<br>
+                    　　「会議を30分に短縮」
+                </div>
+            </div>
+
+            <h3>継続的な対話による最適化</h3>
+            <ul>
+                <li>複数の代替案を提示してもらう</li>
+                <li>特定の条件を追加して再検索</li>
+                <li>参加者の優先度を考慮した調整</li>
+            </ul>
+        </div>
+
+        <!-- スライド8: まとめ -->
+        <div class="slide">
+            <h2>まとめ</h2>
+            
+            <h3>Outlook Copilotによるスケジューリングの利点</h3>
+            
+            <div class="three-columns">
+                <div class="column-box">
+                    <h4>🚀 効率性</h4>
+                    <p>手動での日程調整から解放され、数秒で最適な時間を見つけられます</p>
+                </div>
+                <div class="column-box">
+                    <h4>🎯 正確性</h4>
+                    <p>参加者全員のスケジュールを考慮し、見落としのない調整が可能</p>
+                </div>
+                <div class="column-box">
+                    <h4>🔄 柔軟性</h4>
+                    <p>チャット内で簡単に再調整でき、変更も素早く反映</p>
+                </div>
+            </div>
+
+            <div class="feature-box" style="margin-top: 40px;">
+                <h3>今すぐ始めよう！</h3>
+                <p>1. Outlookを開いてCopilotアイコンをクリック</p>
+                <p>2. 「/」を入力してメンバーを選択</p>
+                <p>3. 自然な言語で会議の要件を伝える</p>
+                <p>4. 提案された時間を確認して送信！</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">前へ</button>
+        <span class="slide-counter" id="slideCounter">1 / 8</span>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">次へ</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            
+            document.getElementById('slideCounter').textContent = `${currentSlide + 1} / ${totalSlides}`;
+            
+            // ナビゲーションボタンの状態更新
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            showSlide(currentSlide + direction);
+        }
+
+        // キーボード操作
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && currentSlide > 0) {
+                changeSlide(-1);
+            } else if (e.key === 'ArrowRight' && currentSlide < totalSlides - 1) {
+                changeSlide(1);
+            }
+        });
+
+        // 初期表示
+        showSlide(0);
+    </script>
+</body>
+</html>
